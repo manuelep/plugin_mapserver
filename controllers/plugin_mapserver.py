@@ -3,35 +3,37 @@
 import requests
 
 # try something like
-def index(): return dict(message="hello from plugin_mapserver.py")
+# def index(): return dict(message="hello from plugin_mapserver.py")
 
-@auth.requires_login()
+@auth.requires(request.client=='127.0.0.1' or auth.is_logged_in(), requires_login=False)
 def setup():
     if "view" in request.args:
         db.mapfile.body.represent=lambda v,_: CODE(v)
     grid = SQLFORM.grid(db.mapfile.id>0,
 #         links = [dict(header=T("Browse"), body=lambda row: row.layer_type and A(T("go"), _href=URL(request.controller, row.layer_type, args=(row.id,))))],
         csv=False, searchable=False,
+        user_signature = (request.client!='127.0.0.1'),
         formname='mapfile_grid'
     )
     return dict(grid=grid)
 
-@auth.requires_login()
+@auth.requires(request.client=='127.0.0.1' or auth.is_logged_in(), requires_login=False)
 def wms():
     return dict(map=LOAD(request.controller, "_wms.load", args=request.args, ajax=True))
 
-@auth.requires_login()
+@auth.requires(request.client=='127.0.0.1' or auth.is_logged_in(), requires_login=False)
 def _wms():
     """ """
     row = db.mapfile[request.args(0, default=0, cast=int)]
     if row is None: raise HTTP(404, "This should never happen, why it happens?")
-    gprops = getGeomProps(tablename=row.slug.split(".")[1], epsg=3857)
+    dbname = (n for n in odbs if odbs[n]._uri.endswith(row.slug.split(".")[0])).next()
+    gprops = getGeomProps(dbname, tablename=row.slug.split(".")[1], epsg=3857)
     extent = json.dumps(gprops["extent"])
     div, jscode = ol.swmsmap(row, extent)
     response.js = jscode
     return dict(map=div)
 
-@auth.requires_login()
+@auth.requires(request.client=='127.0.0.1' or auth.is_logged_in(), requires_login=False)
 def proxy():
 
     session.forget(response)

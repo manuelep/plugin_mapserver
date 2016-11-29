@@ -31,7 +31,7 @@ response.menu += [
 class mapfileCallbacks(object):
 
     @staticmethod
-    def getUriParams(slug):
+    def getUriParams_old(slug):
         dbname, _ = slug.split('.')
         dburi = [i._uri for i in odbs.values() if i._uri.endswith(dbname)][0]
         # user=postgres dbname=c4bt password=postgres host=localhost
@@ -41,6 +41,12 @@ class mapfileCallbacks(object):
         dbname = dburi.split("/")[-1]
         host = dburi.split("@")[1].split("/")[0]
         return dict(user=user, password=password, dbname=dbname, host=host)
+
+    @staticmethod
+    def getUriParams(slug):
+        dbname, _ = slug.split('.')
+        dburi = (i._uri for i in odbs.values() if i._uri.endswith(dbname)).next()
+        user, password, host, database = re.match('mysql://(.*?):(.*?)@(.*?)/(.*)', url).groups()
 
     @classmethod
     def onInsert(cls, f):
