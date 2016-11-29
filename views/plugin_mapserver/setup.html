@@ -1,0 +1,7 @@
+{{extend 'layout.html'}}
+<h1>{{=T("Setup Layers")}}</h1>
+{{if "view" in request.args:}}
+	{{row = db.mapfile[request.args(-1, cast=int)]}}
+	{{=LOAD(request.controller, "_"+row.layer_type, args=(row.id,), extension="load", ajax=True, target="wms-map")}}
+{{pass}}
+{{=grid}}

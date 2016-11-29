@@ -1,0 +1,12 @@
+# Ignore everything
+*
+
+# But not these files...
+!.gitignore
+!plugin_mapserver*
+!views/plugin_mapserver/*
+
+# ...even if they are in subdirectories
+!*/
+
+*.pyc
