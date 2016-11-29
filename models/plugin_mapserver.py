@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from urlparse import urlparse
 if not "jsmin" in vars():
     from jsmin import jsmin
 import cStringIO as StringIO
@@ -31,22 +32,11 @@ response.menu += [
 class mapfileCallbacks(object):
 
     @staticmethod
-    def getUriParams_old(slug):
-        dbname, _ = slug.split('.')
-        dburi = [i._uri for i in odbs.values() if i._uri.endswith(dbname)][0]
-        # user=postgres dbname=c4bt password=postgres host=localhost
-        # postgres://postgres:postgres@localhost/c4bt
-        user = dburi.split("://")[1].split(":")[0]
-        password = dburi.split("://")[1].split(":")[1].split("@")[0]
-        dbname = dburi.split("/")[-1]
-        host = dburi.split("@")[1].split("/")[0]
-        return dict(user=user, password=password, dbname=dbname, host=host)
-
-    @staticmethod
     def getUriParams(slug):
         dbname, _ = slug.split('.')
         dburi = (i._uri for i in odbs.values() if i._uri.endswith(dbname)).next()
-        user, password, host, database = re.match('mysql://(.*?):(.*?)@(.*?)/(.*)', url).groups()
+        nfo = urlparse(dburi)
+        return dict(user=nfo.username, password=nfo.password, dbname=nfo.path[1:], host=nfo.hostname)
 
     @classmethod
     def onInsert(cls, f):
