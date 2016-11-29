@@ -3,6 +3,22 @@
 from gluon import *
 import os
 from jsmin import jsmin
+from urlparse import urlparse
+
+def slugs(odbs):
+    """ Returns catalog.table for each table that has a geometry column """
+    for dbname, odb in odbs.iteritems():
+        for row in odb(odb.geometry_columns.srid>=0).select(
+            odb.geometry_columns.table_catalog, odb.geometry_columns.table_name
+        ):
+            yield "{table_catalog}.{table_name}".format(**row)
+
+def slug2uri(odbs, slug):
+    return (i._uri for i in odbs.values() if i._uri.endswith(slug.split('.')[0])).next()
+
+def getUriParams(dburi):
+    nfo = urlparse(dburi)
+    return dict(user=nfo.username, password=nfo.password, dbname=nfo.path[1:], host=nfo.hostname)
 
 class ol(object):
     """ """
@@ -44,10 +60,10 @@ class ol(object):
         return jscode
 
     @classmethod
-    def swmsmap(cls, row, extent, **kw):
+    def swmsmap(cls, row, extent, path="uploads", **kw):
         """ Returns a single WMS-layer map code and the related DOM element """
         div = dict({"_id": "map", "_style": "height: 500px;"}, **kw)
-        mapfile = os.path.join(os.getcwd(), current.request.folder, "uploads", row.mapfile)
+        mapfile = os.path.join(os.getcwd(), current.request.folder, path, row.mapfile)
         return DIV(**div), jsmin(cls._swmsmap(row.opts["layer_name"], extent, div["_id"], map=mapfile))
 
 #     @classmethod

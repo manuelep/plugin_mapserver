@@ -29,7 +29,7 @@ def _wms():
     dbname = (n for n in odbs if odbs[n]._uri.endswith(row.slug.split(".")[0])).next()
     gprops = getGeomProps(dbname, tablename=row.slug.split(".")[1], epsg=3857)
     extent = json.dumps(gprops["extent"])
-    div, jscode = ol.swmsmap(row, extent)
+    div, jscode = ol.swmsmap(row, extent, path=db.mapfile.mapfile.uploadfolder)
     response.js = jscode
     return dict(map=div)
 
