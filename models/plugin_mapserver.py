@@ -23,23 +23,29 @@ def _plugin_mapserver(msdb):
         Field("opts", "json", default={})
     )
 
+    def _update(body, filename):
+        stream = StringIO.StringIO(body)
+        return msdb.mapfile.mapfile.store(stream, filename)
+
     def onInsert(f):
 
         opts = dict(f.get('opts', {}), **getUriParams(slug2uri(odbs, f["slug"])))
-
-        stream = StringIO.StringIO(f["body"] % opts)
         filename = "%(slug)s_%(layer_type)s.map" % f
-        f["mapfile"] = msdb.mapfile.mapfile.store(stream, filename)
+        f["mapfile"] = _update(f["body"] % opts, filename)
 
     def onUpdate(s, f):
 
         for row in s.select():
 
-            opts = dict(f.get('opts', row.opts or {}), **getUriParams(slug2uri(odbs, f["slug"])))
+            opts = dict(f.get('opts', row.opts or {}), **getUriParams(slug2uri(odbs, f["slug"] or row.slug)))
             body = f["body"] if opts is None else f["body"] % opts
+            if "slug" in f and "layer_type" in f:
+                filename = "%(slug)s_%(layer_type)s.map" % f
+            else:
+                (filename, stream) = msdb.mapfile.mapfile.retrieve(row.mapfile)
 
-            with open(os.path.join(os.getcwd(), request.folder, "uploads", row.mapfile), "wb") as mapfile:
-                mapfile.write(body)
+            f["mapfile"] = _update(body, filename)
+
 
     msdb.mapfile._before_insert.append(onInsert)
     msdb.mapfile._after_update.append(onUpdate)
