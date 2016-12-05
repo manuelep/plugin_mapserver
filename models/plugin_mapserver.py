@@ -5,7 +5,8 @@ def _plugin_mapserver(msdb):
     from plugin_mapserver import slugs, slug2uri, getUriParams
     import cStringIO as StringIO
     from gluon.tools import PluginManager
-    import os
+    if not "os" in vars():
+        import os
 
     plugins = PluginManager('mapserver')
 
@@ -48,7 +49,8 @@ def _plugin_mapserver(msdb):
                 " ", T("Mapserver setup"), _style="color: yellow;"), False, URL("plugin_mapserver", "setup"), [],),
     ]
 
+    return msdb
 
 if not myconf.get("mapserver.custom_db"):
-    _plugin_mapserver(db)
+    msdb = _plugin_mapserver(db)
 

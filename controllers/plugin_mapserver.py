@@ -8,8 +8,8 @@ import requests
 @auth.requires(request.client=='127.0.0.1' or auth.is_logged_in(), requires_login=False)
 def setup():
     if "view" in request.args:
-        db.mapfile.body.represent=lambda v,_: CODE(v)
-    grid = SQLFORM.grid(db.mapfile.id>0,
+        msdb.mapfile.body.represent=lambda v,_: CODE(v)
+    grid = SQLFORM.grid(msdb.mapfile.id>0,
 #         links = [dict(header=T("Browse"), body=lambda row: row.layer_type and A(T("go"), _href=URL(request.controller, row.layer_type, args=(row.id,))))],
         csv=False, searchable=False,
         user_signature = (request.client!='127.0.0.1'),
@@ -24,12 +24,12 @@ def wms():
 @auth.requires(request.client=='127.0.0.1' or auth.is_logged_in(), requires_login=False)
 def _wms():
     """ """
-    row = db.mapfile[request.args(0, default=0, cast=int)]
+    row = msdb.mapfile[request.args(0, default=0, cast=int)]
     if row is None: raise HTTP(404, "This should never happen, why it happens?")
     dbname = (n for n in odbs if odbs[n]._uri.endswith(row.slug.split(".")[0])).next()
     gprops = getGeomProps(dbname, tablename=row.slug.split(".")[1], epsg=3857)
     extent = json.dumps(gprops["extent"])
-    div, jscode = ol.swmsmap(row, extent, path=db.mapfile.mapfile.uploadfolder)
+    div, jscode = ol.swmsmap(row, extent, path=msdb.mapfile.mapfile.uploadfolder)
     response.js = jscode
     return dict(map=div)
 
